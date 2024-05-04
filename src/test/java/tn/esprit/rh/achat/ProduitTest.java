@@ -37,9 +37,6 @@ public class ProduitTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
-    private CategorieProduitRepository categorieProduitRepository;
-
     @MockBean
    private CategorieProduitRepository categorieProduitRepository;
 
