@@ -1,11 +1,17 @@
 package tn.esprit.rh.achat;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import tn.esprit.rh.achat.entities.CategorieProduit;
 import tn.esprit.rh.achat.entities.Produit;
 import tn.esprit.rh.achat.repositories.CategorieProduitRepository;
 import tn.esprit.rh.achat.repositories.ProduitRepository;
@@ -27,6 +33,12 @@ import static org.mockito.Mockito.when;
 @ContextConfiguration(classes = {ProduitServiceImpl.class})
 @ExtendWith(SpringExtension.class)
 public class ProduitTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private CategorieProduitRepository categorieProduitRepository;
 
     @MockBean
    private CategorieProduitRepository categorieProduitRepository;
@@ -54,5 +66,51 @@ public class ProduitTest {
         doNothing().when(produitRepository).deleteById((Long) any());
         produitServiceImpl.deleteProduit(123L);
         verify(produitRepository).deleteById((Long) any());
+    }
+
+    @Test
+    public void testRetrieveCategorieProduit() throws Exception {
+        // Arrange
+        Long id = 1L; // Assuming there is a category with this ID in the database
+        CategorieProduit categorieProduit = new CategorieProduit();
+        categorieProduit.setIdCategorieProduit(id);
+        when(categorieProduitRepository.findById(id)).thenReturn(java.util.Optional.of(categorieProduit));
+
+        // Act & Assert
+        mockMvc.perform(MockMvcRequestBuilders.get("/categorieProduit/retrieve-categorieProduit/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.idCategorieProduit").value(id));
+
+        // Verify
+        verify(categorieProduitRepository).findById(id);
+    }
+
+    @Test
+    public void testAddCategorieProduit() throws Exception {
+        // Arrange
+        CategorieProduit categorieProduit = new CategorieProduit();
+        categorieProduit.setCodeCategorie("TestCode");
+        categorieProduit.setLibelleCategorie("TestLibelle");
+
+        // Act & Assert
+        mockMvc.perform(MockMvcRequestBuilders.post("/categorieProduit/add-categorieProduit")
+                        .content(asJsonString(categorieProduit))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.codeCategorie").value("TestCode"));
+
+        // Verify
+        verify(categorieProduitRepository).save(categorieProduit);
+    }
+
+    // Utility method to convert object to JSON string
+    public static String asJsonString(final Object obj) {
+        try {
+            return new ObjectMapper().writeValueAsString(obj);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
