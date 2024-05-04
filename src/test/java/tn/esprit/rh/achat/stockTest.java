@@ -40,7 +40,7 @@ public class stockTest {
     }
 
     @Test
-    public void testRetrieveAllFactures() {
+    public void testRetrieveAllStocks() {
         List<Stock> stocks = stockService.retrieveAllStocks();
 
         assertEquals(2, stocks.size());
